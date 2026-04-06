@@ -1,67 +1,74 @@
 #include <SDL3/SDL.h>
-#include <stdio.h>
+#include <stdbool.h>
 
-#define WINDOW_WIDTH  800
-#define WINDOW_HEIGHT 600
-#define CIRCLE_RADIUS 50
+void DrawCircle(SDL_Renderer *renderer, int cx, int cy, int radius) {
+    int x = radius - 1;
+    int y = 0;
+    int dx = 1;
+    int dy = 1;
+    int err = dx - (radius * 2);
+
+    while (x >= y) {
+        SDL_RenderPoint(renderer, cx + x, cy + y);
+        SDL_RenderPoint(renderer, cx + y, cy + x);
+        SDL_RenderPoint(renderer, cx - y, cy + x);
+        SDL_RenderPoint(renderer, cx - x, cy + y);
+        SDL_RenderPoint(renderer, cx - x, cy - y);
+        SDL_RenderPoint(renderer, cx - y, cy - x);
+        SDL_RenderPoint(renderer, cx + y, cy - x);
+        SDL_RenderPoint(renderer, cx + x, cy - y);
+
+        if (err <= 0) {
+            y++;
+            err += dy;
+            dy += 2;
+        }
+        if (err > 0) {
+            x--;
+            dx += 2;
+            err += dx - (radius * 2);
+        }
+    }
+}
 
 int main(int argc, char* argv[]) {
-    // Initialize SDL3
+   
     if (!SDL_Init(SDL_INIT_VIDEO)) {
-        printf("SDL_Init Error: %s\n", SDL_GetError());
         return 1;
     }
 
-    // Create window
-    SDL_Window* window = SDL_CreateWindow("Task 101 - Draw Circle",
-                                          WINDOW_WIDTH, WINDOW_HEIGHT,
-                                          SDL_WINDOW_RESIZABLE);
-    if (!window) {
-        printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
-        SDL_Quit();
-        return 1;
-    }
+    int windowWidth = 800;
+    int windowHeight = 600;
+    SDL_Window *window = SDL_CreateWindow("Task 101 - Static Circle", windowWidth, windowHeight, 0);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, NULL);
 
-    // Create renderer
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL, SDL_RENDERER_ACCELERATED);
-    if (!renderer) {
-        printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-
-    // Center coordinates
-    int centerX = WINDOW_WIDTH / 2;
-    int centerY = WINDOW_HEIGHT / 2;
-
+    bool running = true;
     SDL_Event event;
-    int running = 1;
+
+    // বৃত্তের কেন্দ্র (Center of window) এবং ব্যাসার্ধ (radius)
+    int centerX = windowWidth / 2;
+    int centerY = windowHeight / 2;
+    int radius = 100;
 
     while (running) {
-        // Handle events
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
-                running = 0;
+                running = false;
             }
         }
 
-        // Clear screen (black background)
+        // Background কালো 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        // Draw filled circle (white)
+        // বৃত্তের রঙ সাদা করা এবং ড্র করা
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderFillCircle(renderer, centerX, centerY, CIRCLE_RADIUS);
+        DrawCircle(renderer, centerX, centerY, radius);
 
-        // Present the frame
         SDL_RenderPresent(renderer);
-
-        // Small delay to reduce CPU usage
-        SDL_Delay(16);
+        SDL_Delay(16); 
     }
 
-    // Cleanup
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
